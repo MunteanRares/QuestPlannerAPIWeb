@@ -7,7 +7,11 @@ namespace QuestPlannerAPI.Models
     {
         public string Description { get; set; }
 
+        [JsonProperty(PropertyName = "place_id")]
+        public string PlaceId { get; set; }
+
         [JsonProperty(PropertyName = "structured_formatting")]
         public StructuredFormattingModel StructuredFormatting { get; set; }
+
     }
 }

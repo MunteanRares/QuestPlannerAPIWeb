@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using QuestPlannerAPI.Models;
+using QuestPlannerAPI.Models.Detailed_City_Model;
 using QuestPlannerAPI.Services;
 using RestSharp;
 
@@ -14,19 +15,19 @@ namespace QuestPlannerAPI.Controllers
     public class CitiesController : ControllerBase
     {
         private readonly ILogger<CitiesController> _logger;
-        private readonly ICityApiService _cityApiService;
+        private readonly IGoogleApiService _cityApiService;
 
-        public CitiesController(ILogger<CitiesController> logger, ICityApiService cityApiService)
+        public CitiesController(ILogger<CitiesController> logger, IGoogleApiService cityApiService)
         {
             _logger = logger;
             _cityApiService = cityApiService;
         }
 
         // GET: api/<CitiesController>
-        [HttpGet]
-        public IEnumerable<string> Get()
+        [HttpGet("getDetailedCity")]
+        public List<DetailedCityModel> GetDetails(string placeId)
         {
-            return new string[] { "value1", "value2" };
+            return _cityApiService.GetDetailedCity(placeId);
         }
 
         // GET api/<CitiesController>
@@ -34,24 +35,6 @@ namespace QuestPlannerAPI.Controllers
         public IEnumerable<CityModel> Get(string cityName)
         {
             return _cityApiService.GetCityBySearch(cityName); ;
-        }
-
-        // POST api/<CitiesController>
-        [HttpPost]
-        public void Post([FromBody] string value)
-        {
-        }
-
-        // PUT api/<CitiesController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
-        {
-        }
-
-        // DELETE api/<CitiesController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
         }
     }
 }

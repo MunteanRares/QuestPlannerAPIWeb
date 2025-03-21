@@ -10,7 +10,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddTransient<ICityApiService, CityApiService>();
+builder.Services.AddTransient<IGoogleApiService, GoogleApiService>();
 
 
 builder.Services.AddCors(options =>
