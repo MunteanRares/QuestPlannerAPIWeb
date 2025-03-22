@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using QuestPlannerAPI.Models;
 using QuestPlannerAPI.Models.Detailed_City_Model;
+using QuestPlannerAPI.Models.Main_Page;
 using QuestPlannerAPI.Services;
 using RestSharp;
 
@@ -25,7 +26,7 @@ namespace QuestPlannerAPI.Controllers
 
         // GET: api/<CitiesController>
         [HttpGet("getDetailedCity")]
-        public List<DetailedCityModel> GetDetails(string placeId)
+        public IEnumerable<DetailedCityModel> GetDetails(string placeId)
         {
             return _cityApiService.GetDetailedCity(placeId);
         }
@@ -35,6 +36,12 @@ namespace QuestPlannerAPI.Controllers
         public IEnumerable<CityModel> Get(string cityName)
         {
             return _cityApiService.GetCityBySearch(cityName); ;
+        }
+
+        [HttpGet("getMostVisited")]
+        public IEnumerable<MostVisitedCityModel> GetmostVisited()
+        {
+            return _cityApiService.GetMostVisitedCities();
         }
     }
 }

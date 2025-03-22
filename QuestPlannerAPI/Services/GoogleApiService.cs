@@ -1,7 +1,11 @@
 ﻿using System.Runtime.CompilerServices;
+using AngleSharp.Html.Dom;
+using AngleSharp.Html.Parser;
 using Newtonsoft.Json;
 using QuestPlannerAPI.Models;
 using QuestPlannerAPI.Models.Detailed_City_Model;
+using QuestPlannerAPI.Models.Get_Photo_Name;
+using QuestPlannerAPI.Models.Main_Page;
 using RestSharp;
 
 namespace QuestPlannerAPI.Services
@@ -86,6 +90,57 @@ namespace QuestPlannerAPI.Services
             string imageUrl = photoString.PhotoUri;
             
             return imageUrl;
+        }
+
+        public List<MostVisitedCityModel> GetMostVisitedCities()
+        {
+            var request = new RestRequest("https://en.wikipedia.org/wiki/List_of_cities_by_international_visitors", Method.Get);
+
+            RestResponse response = _client.Execute(request);
+
+            HtmlParser parser = new HtmlParser();
+
+            IHtmlDocument mostPopularCities = parser.ParseDocument(response.Content);            
+
+            var cityTable = mostPopularCities.QuerySelector("table");
+
+            var rows = cityTable.QuerySelectorAll("tr").Skip(1).ToList();
+
+            List<MostVisitedCityModel> output  = new List<MostVisitedCityModel>();
+
+
+            foreach (var row in rows)
+            {
+                var cells = row.QuerySelectorAll("td");
+                string cityName = cells[1].TextContent.Replace("\n", "").Replace(" ", "");
+                string countryName = cells[2].TextContent.Replace("\n", "").Replace(" ", "");
+
+                (string photoName, string placeId) = GetPhotoNameAndPlaceId(cityName);
+                string imageUrl = GetImageFromReferenceCode(photoName);
+
+                MostVisitedCityModel tempObj = new MostVisitedCityModel { CityName = cityName, Country=countryName, ImageUrl = imageUrl, placeId = placeId };
+                output.Add(tempObj);
+            }
+
+            return output;
+        }
+
+        public (string, string) GetPhotoNameAndPlaceId(string cityName)
+        {
+            var request = new RestRequest("https://places.googleapis.com/v1/places:searchText", Method.Post);
+
+            request.AddQueryParameter("textQuery", cityName);
+            request.AddHeader("X-Goog-Api-Key", _key);
+            request.AddHeader("X-Goog-FieldMask", "places.photos,places.id");
+
+            RestResponse response = _client.Execute(request);
+
+            PlacesResponse jsonContent = JsonConvert.DeserializeObject<PlacesResponse>(response.Content);
+
+            Random rnd = new Random();
+            int rndIndex = rnd.Next(0, jsonContent.Places[0].Photos.Count - 1);
+
+            return (jsonContent.Places[0].Photos[rndIndex].Name, jsonContent.Places[0].id);
         }
     }
 }
