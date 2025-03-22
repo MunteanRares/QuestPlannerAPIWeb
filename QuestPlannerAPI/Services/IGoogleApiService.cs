@@ -6,9 +6,10 @@ namespace QuestPlannerAPI.Services
 {
     public interface IGoogleApiService
     {
-        List<CityModel> GetCityBySearch(string cityName);
-        List<DetailedCityModel> GetDetailedCity(string placeId);
-        List<MostVisitedCityModel> GetMostVisitedCities();
+        IEnumerable<CityModel> GetCityBySearch(string cityName);
+        IEnumerable<DetailedCityModel> GetDetailedCity(string placeId);
+        IEnumerable<MostVisitedCityModel> GetMostVisitedCities();
         (string, string) GetPhotoNameAndPlaceId(string cityName);
+        IEnumerable<NearbyPlacesModel> SerachNearby(float lat, float lng);   
     }
 }

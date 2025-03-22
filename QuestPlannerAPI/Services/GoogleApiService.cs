@@ -1,7 +1,9 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Net.Http.Json;
+using System.Runtime.CompilerServices;
 using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using QuestPlannerAPI.Models;
 using QuestPlannerAPI.Models.Detailed_City_Model;
 using QuestPlannerAPI.Models.Get_Photo_Name;
@@ -21,7 +23,7 @@ namespace QuestPlannerAPI.Services
             _client = new RestClient();
         }
 
-        public List<CityModel> GetCityBySearch(string cityName)
+        public IEnumerable<CityModel> GetCityBySearch(string cityName)
         {
             //var client = new RestClient();
             var request = new RestRequest($"{_baseUrl}/autocomplete/json", Method.Post);
@@ -44,7 +46,7 @@ namespace QuestPlannerAPI.Services
             return output;
         }
 
-        public List<DetailedCityModel> GetDetailedCity(string placeId)
+        public IEnumerable<DetailedCityModel> GetDetailedCity(string placeId)
         {
             var request = new RestRequest($"https://places.googleapis.com/v1/places/{placeId}", Method.Get);
 
@@ -92,7 +94,7 @@ namespace QuestPlannerAPI.Services
             return imageUrl;
         }
 
-        public List<MostVisitedCityModel> GetMostVisitedCities()
+        public IEnumerable<MostVisitedCityModel> GetMostVisitedCities()
         {
             var request = new RestRequest("https://en.wikipedia.org/wiki/List_of_cities_by_international_visitors", Method.Get);
 
@@ -141,6 +143,54 @@ namespace QuestPlannerAPI.Services
             int rndIndex = rnd.Next(0, jsonContent.Places[0].Photos.Count - 1);
 
             return (jsonContent.Places[0].Photos[rndIndex].Name, jsonContent.Places[0].id);
+        }
+
+        public IEnumerable<NearbyPlacesModel> SerachNearby(float lat, float lng)
+        {
+            var payload = new
+            {
+                maxResultCount = 7,
+                locationRestriction = new
+                {
+                    circle = new
+                    {
+                        center = new
+                        {
+                            latitude = lat,
+                            longitude = lng
+                        },
+                        radius = 1000
+                    }
+                }
+            };
+
+            string jsonbody = JsonConvert.SerializeObject(payload);
+
+            var request = new RestRequest("https://places.googleapis.com/v1/places:searchNearby", Method.Post);
+            request.AddQueryParameter("key", _key);
+            request.AddQueryParameter("languageCode", "en");
+            request.AddHeader("X-Goog-FieldMask", "places.photos,places.displayName,places.formattedAddress,places.addressComponents");
+            request.AddBody(jsonbody, contentType: "application/json");
+
+            RestResponse response = _client.Execute(request);
+            Root objectResponse = JsonConvert.DeserializeObject<Root>(response.Content);
+
+            string currentCityName = objectResponse.places[0].addressComponents.FirstOrDefault(elementInAddressComponents => elementInAddressComponents.types.Contains("locality")).longText;
+
+            (string photoName, string placeId) = GetPhotoNameAndPlaceId(currentCityName);
+
+            List<NearbyPlacesModel> output = new List<NearbyPlacesModel>();
+
+
+            foreach (var place in objectResponse.places)
+            {
+                Random rnd = new Random();
+                int rndIndex = rnd.Next(0, place.photos.Count - 1);
+                string imageUrl = GetImageFromReferenceCode(place.photos[rndIndex].name);
+                output.Add(new NearbyPlacesModel { PlaceName = place.displayName.text, CurrentCityName = currentCityName, formattedAddress = place.formattedAddress, ImageUrl = imageUrl, PlaceId = placeId });
+            }
+
+            return output;
         }
     }
 }

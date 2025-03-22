@@ -2,7 +2,7 @@
 
 namespace QuestPlannerAPI.Models.Get_Photo_Name
 {
-    public class Photo
+    public class GetPhotoNamePhoto
     {
         [JsonProperty("name")]
         public string Name { get; set; }

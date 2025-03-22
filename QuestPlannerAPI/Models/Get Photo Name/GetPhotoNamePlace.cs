@@ -2,10 +2,10 @@
 
 namespace QuestPlannerAPI.Models.Get_Photo_Name
 {
-    public class Place
+    public class GetPhotoNamePlace
     {
         [JsonProperty("photos")]
-        public List<Photo> Photos { get; set; }
+        public List<GetPhotoNamePhoto> Photos { get; set; }
         public string id { get; set; }
     }
 }
