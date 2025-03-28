@@ -8,6 +8,7 @@ using QuestPlannerAPI.Models;
 using QuestPlannerAPI.Models.Detailed_City_Model;
 using QuestPlannerAPI.Models.Get_Photo_Name;
 using QuestPlannerAPI.Models.Main_Page;
+using QuestPlannerAPI.Models.Search_Nearby_Places;
 using RestSharp;
 
 namespace QuestPlannerAPI.Services
@@ -49,10 +50,9 @@ namespace QuestPlannerAPI.Services
         public IEnumerable<DetailedCityModel> GetDetailedCity(string placeId)
         {
             var request = new RestRequest($"https://places.googleapis.com/v1/places/{placeId}", Method.Get);
-
-            //request.AddQueryParameter("place_id", placeId);
+            
             request.AddQueryParameter("key", _key);
-            request.AddQueryParameter("fields", "name,formattedAddress,photos,websiteUri,rating,userRatingCount");
+            request.AddHeader("X-Goog-FieldMask", "name,displayName,location,formattedAddress,photos,websiteUri,rating,userRatingCount");
 
             RestResponse response = _client.Execute(request);
 
@@ -149,6 +149,7 @@ namespace QuestPlannerAPI.Services
         {
             var payload = new
             {
+                excludedTypes = new[] { "liquor_store", "convenience_store", "hospital", "dentist", "doctor", "pharmacy", "drugstore", "dental_clinic", "wellness_center", "grocery_store" },
                 maxResultCount = 7,
                 locationRestriction = new
                 {
@@ -189,6 +190,49 @@ namespace QuestPlannerAPI.Services
                 string imageUrl = GetImageFromReferenceCode(place.photos[rndIndex].name);
                 output.Add(new NearbyPlacesModel { PlaceName = place.displayName.text, CurrentCityName = currentCityName, formattedAddress = place.formattedAddress, ImageUrl = imageUrl, PlaceId = placeId });
             }
+
+            return output;
+        }
+
+        public IEnumerable<SeachNearbyPlacesCleanModel> SearchNearbyPlaces(string searchTerm, float lat, float lng)
+        {            
+            var request = new RestRequest($"https://places.googleapis.com/v1/places:autocomplete", Method.Post);
+
+            var payload = new
+            {
+                input = searchTerm,
+                locationRestriction = new
+                {
+                    circle = new
+                    {
+                        center = new
+                        {
+                            latitude = lat,
+                            longitude = lng
+                        },
+                        radius = 10000 // 5km
+                    }
+                }
+            };
+
+            request.AddBody(payload);
+            request.AddQueryParameter("key", _key);
+
+            RestResponse response = _client.Execute(request);
+
+            ResultsFromSearchNearbyPlaces jsonResponse = JsonConvert.DeserializeObject<ResultsFromSearchNearbyPlaces>(response.Content);
+
+            List <SeachNearbyPlacesCleanModel> output = new List<SeachNearbyPlacesCleanModel>();
+
+            if(jsonResponse.Suggestions != null)
+            {
+                foreach (var item in jsonResponse.Suggestions)
+                {
+                    SeachNearbyPlacesCleanModel temp = new SeachNearbyPlacesCleanModel {PlaceId = item.PlacePrediction.PlaceId, PlaceName = item.PlacePrediction.Text.TextText, PlaceTags = item.PlacePrediction.Types.ToList() };
+                    output.Add(temp);
+                }
+            }
+            
 
             return output;
         }

@@ -2,7 +2,7 @@
 {
     public class LocationModel
     {
-        public float lat { get; set; }
-        public float lng { get; set; }
+        public string Latitude { get; set; }
+        public string Longitude { get; set; }
     }
 }
