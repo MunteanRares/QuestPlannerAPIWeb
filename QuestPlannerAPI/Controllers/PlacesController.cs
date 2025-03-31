@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using QuestPlannerAPI.Models;
 using QuestPlannerAPI.Models.Search_Nearby_Places;
 using QuestPlannerAPI.Services;
 
 namespace QuestPlannerAPI.Controllers
-{
+{    
     [Route("api/[controller]")]
     [ApiController]
     public class PlacesController : ControllerBase
