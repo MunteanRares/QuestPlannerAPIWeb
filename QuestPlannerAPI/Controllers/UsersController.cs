@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.VisualStudio.Services.Users;
 using QuestPlannerAPI.Data;
 using QuestPlannerAPI.Models;
 using QuestPlannerAPI.Services;
@@ -34,8 +35,9 @@ namespace QuestPlannerAPI.Controllers
             {
                 _db.Users.Add(newUser);
                 _db.SaveChanges();
-                return StatusCode(201, newUser);
-            }
+                string token = _authService.Login(newUser);
+                return StatusCode(201, new { token });
+            }   
             else
             {
                 return BadRequest("User already exists");   
@@ -54,7 +56,6 @@ namespace QuestPlannerAPI.Controllers
         [HttpPost("ValidateToken")]
         public IActionResult ValidateToken([FromHeader] string authorization)
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(authorization))
             {
                 return Unauthorized(new { valid = false, message = "No token provided." });
@@ -81,6 +82,22 @@ namespace QuestPlannerAPI.Controllers
             catch (Exception)
             {          
                 return Unauthorized(new { valid = false, message = "Invalid or expired token." });
+            }
+        }
+
+        [Authorize]
+        [HttpGet("getProfile")]
+        public IActionResult GetProfile()
+        {
+            string? userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId != null)
+            {
+                Users? user = _db.Users.Find(int.Parse(userId));
+                return Ok(new { username = user.Username, email = user.Email });
+            }
+            else
+            {
+                 return NotFound("User not found");
             }
         }
     }

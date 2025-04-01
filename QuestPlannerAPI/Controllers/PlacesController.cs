@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using QuestPlannerAPI.Models;
 using QuestPlannerAPI.Models.Search_Nearby_Places;
 using QuestPlannerAPI.Services;
