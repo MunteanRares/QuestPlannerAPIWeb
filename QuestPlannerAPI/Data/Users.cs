@@ -9,5 +9,6 @@ namespace QuestPlannerAPI.Data
         public string Email { get; set; }
         public string Password { get; set; }
         public DateTime CratedAt { get; set; } = DateTime.UtcNow;
+        public ICollection<Itineraries> Itineraries { get; set; } = new List<Itineraries>();
     }
 }
