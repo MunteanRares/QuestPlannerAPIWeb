@@ -12,8 +12,8 @@ using QuestPlannerAPI.Data;
 namespace QuestPlannerAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250402201653_tables")]
-    partial class tables
+    [Migration("20250403153331_init")]
+    partial class init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -60,10 +60,7 @@ namespace QuestPlannerAPI.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("Date")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("DayNumber")
-                        .HasColumnType("integer");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("ItinerariesId")
                         .HasColumnType("integer");
@@ -84,7 +81,7 @@ namespace QuestPlannerAPI.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("StartDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Title")
                         .IsRequired()

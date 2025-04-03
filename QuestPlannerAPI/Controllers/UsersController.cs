@@ -1,6 +1,7 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -99,6 +100,62 @@ namespace QuestPlannerAPI.Controllers
             {
                  return NotFound("User not found");
             }
+        }
+
+        [Authorize]
+        [HttpPost("saveItinerary")]
+        public IActionResult SaveItinerary(ItineraryDTO itineraryDTO)
+        {
+            string? userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if(userId == null) return Unauthorized();
+            Users? user = _db.Users.Find(int.Parse(userId));
+
+            itineraryDTO.StartDate = itineraryDTO.StartDate.ToLocalTime();
+            foreach (var day in itineraryDTO.Days)
+            {
+                day.Date = day.Date.ToLocalTime();
+            }
+
+            Itineraries itinerary = new Itineraries
+            {
+                Title = itineraryDTO.Title,
+                StartDate = itineraryDTO.StartDate,
+                UsersId = int.Parse(userId),
+                User = user,
+                Days = new List<Days>()
+            };
+
+            _db.Itinieraries.Add(itinerary);
+
+            foreach (var dayDTO in itineraryDTO.Days)
+            {
+                Days day = new Days
+                {
+                    Date = dayDTO.Date,
+                    ItinerariesId = itinerary.Id,
+                    Activities = new List<Activities>()
+                };
+
+                foreach (var activityDTO in dayDTO.Activities)
+                {
+                    Activities activity = new Activities
+                    {
+                        Location = activityDTO.Location,
+                        ImageUrl = activityDTO.ImageUrl,
+                        DaysId = day.Id
+                    };
+                    _db.Activities.Add(activity);
+                    day.Activities.Add(activity);
+                }
+
+                _db.Days.Add(day);
+                itinerary.Days.Add(day);
+            }
+
+            _db.Itinieraries.Add(itinerary);
+            _db.SaveChanges();
+            
+            return Ok();
         }
     }
 }

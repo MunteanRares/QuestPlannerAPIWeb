@@ -25,6 +25,9 @@ namespace QuestPlannerAPI.Data
             modelBuilder.Entity<Itineraries>().HasOne(i => i.User).WithMany(i => i.Itineraries).HasForeignKey(i => i.UsersId);
             modelBuilder.Entity<Days>().HasOne(i => i.Itinerary).WithMany(i => i.Days).HasForeignKey(i => i.ItinerariesId);
             modelBuilder.Entity<Activities>().HasOne(i => i.Day).WithMany(i => i.Activities).HasForeignKey(i => i.DaysId);
+
+            modelBuilder.Entity<Itineraries>().Property(i => i.StartDate).HasColumnType("timestamp without time zone");
+            modelBuilder.Entity<Days>().Property(d => d.Date).HasColumnType("timestamp without time zone");
         }
     }
 }
