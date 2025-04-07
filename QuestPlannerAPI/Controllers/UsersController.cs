@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Razor.TagHelpers;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.VisualStudio.Services.Users;
 using QuestPlannerAPI.Data;
@@ -155,6 +156,46 @@ namespace QuestPlannerAPI.Controllers
             _db.Itinieraries.Add(itinerary);
             _db.SaveChanges();
             
+            return Ok();
+        }
+
+        [Authorize]
+        [HttpGet("getItineraries")]
+        public IActionResult GetItineraries()
+        {
+            string? userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null) return Unauthorized();
+            Users user = _db.Users.Find(int.Parse(userId));
+
+            var itineraries = _db.Itinieraries.Where(i => i.User.Id == user.Id).Include(i => i.Days).ThenInclude(i => i.Activities).ToList();
+
+            List<ItineraryDTO> output = itineraries.Select(itinerary => new ItineraryDTO
+            {
+                Id = itinerary.Id,
+                Title = itinerary.Title,
+                StartDate = itinerary.StartDate,
+                Days = itinerary.Days.Select(day => new DaysDTO
+                {
+                    Date = day.Date,
+                    Activities = day.Activities.Select(activity => new ActivitiesDTO
+                    {
+                        ImageUrl = activity.ImageUrl,
+                        Location = activity.Location
+                    }).ToList()
+                }).ToList()
+            }).ToList();
+
+            return Ok(output);
+        }
+
+        [Authorize]
+        [HttpDelete("deleteItinerary/{id}")]
+        public IActionResult DeleteItinerary(int id)
+        {
+            Itineraries itinerary = _db.Itinieraries.Find(id);
+            if (itinerary == null) return BadRequest("Itinerary Not Found");
+            _db.Itinieraries.Remove(itinerary);
+            _db.SaveChanges();
             return Ok();
         }
     }
